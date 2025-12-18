@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recall Master | Focus</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-body: #f1f5f9;
+            --bg-sidebar: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #10b981;
+            --danger: #ef4444;
+            --sidebar-width: 350px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* --- LAYOUT GRID --- */
+        .app-container {
+            display: grid;
+            grid-template-columns: var(--sidebar-width) 1fr;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        @media (max-width: 800px) {
+            .app-container { grid-template-columns: 1fr; }
+            .sidebar { display: none; }
+            .mobile-menu-btn { display: block !important; }
+        }
+
+        /* --- SIDEBAR --- */
+        .sidebar {
+            background: var(--bg-sidebar);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            z-index: 20;
+        }
+
+        .sidebar-header { padding: 15px; border-bottom: 1px solid var(--border); background: #f8fafc; }
+
+        .sidebar-title {
+            font-size: 0.75rem; font-weight: 800; color: var(--text-muted);
+            text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+
+        .btn-action {
+            width: 100%; padding: 10px; margin-bottom: 8px; border: 1px solid var(--border);
+            background: white; border-radius: 6px; cursor: pointer; font-weight: 600;
+            font-size: 0.85rem; color: var(--text-main); transition: 0.1s;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-action:hover { background: #f1f5f9; }
+        .btn-action.primary { background: #eef2ff; color: var(--primary); border-color: #c7d2fe; }
+        .btn-action.primary:hover { background: #e0e7ff; }
+
+        .sidebar-content { flex: 1; overflow-y: auto; padding: 10px; }
+
+        /* Deck Card */
+        .deck-card {
+            background: white; border: 1px solid var(--border); padding: 12px;
+            border-radius: 8px; margin-bottom: 10px; cursor: default; transition: 0.1s;
+        }
+        .deck-card:hover { border-color: #cbd5e1; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .deck-info { cursor: pointer; }
+        .deck-name { font-weight: 700; font-size: 0.95rem; color: var(--text-main); }
+        .deck-meta { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
+
+        .deck-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; }
+        .icon-btn {
+            flex: 1; border: none; background: #f8fafc; color: var(--text-muted);
+            border-radius: 4px; padding: 6px; font-size: 0.8rem; cursor: pointer;
+            font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 4px;
+        }
+        .icon-btn:hover { background: #e2e8f0; color: var(--text-main); }
+        .btn-play { background: #e0e7ff; color: var(--primary); } .btn-play:hover { background: var(--primary); color: white; }
+        .btn-del:hover { background: #fee2e2; color: var(--danger); }
+
+        /* Active Deck List */
+        .nav-back { cursor: pointer; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); padding: 5px 0; margin-bottom: 10px; display: flex; align-items: center; gap: 5px; }
+        .nav-back:hover { color: var(--primary); }
+
+        .question-item {
+            padding: 10px; border-radius: 6px; margin-bottom: 4px; cursor: pointer;
+            border: 1px solid transparent; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem;
+        }
+        .question-item:hover { background: #f8fafc; border-color: var(--border); }
+        .question-item.active { background: #eef2ff; border-color: #c7d2fe; color: var(--primary); font-weight: 600; }
+        
+        .badge { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; min-width: 40px; text-align: center; }
+        .badge-none { background: #f1f5f9; color: #94a3b8; } .badge-good { background: #dcfce7; color: #166534; } .badge-bad { background: #fee2e2; color: #991b1b; }
+
+        /* --- MAIN PANE --- */
+        .main-pane { display: flex; flex-direction: column; height: 100%; overflow-y: auto; background: #f8fafc; position: relative; }
+
+        .top-bar {
+            background: white; padding: 15px 30px; border-bottom: 1px solid var(--border);
+            display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 30;
+        }
+        .brand { font-weight: 900; font-size: 1.2rem; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+        .mobile-menu-btn { display: none; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-main); }
+
+        .mode-switch { background: #e2e8f0; padding: 4px; border-radius: 8px; display: flex; }
+        .mode-btn { padding: 6px 14px; border: none; background: transparent; font-weight: 600; color: #64748b; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; }
+        .mode-btn.active { background: white; color: var(--primary); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+
+        /* Workspace */
+        .workspace { max-width: 800px; margin: 30px auto; width: 90%; display: flex; flex-direction: column; gap: 20px; padding-bottom: 50px; }
+        .card { background: white; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden; }
+
+        .prompt-header { padding: 24px; border-bottom: 1px solid var(--border); background: #ffffff; }
+        .prompt-label { font-size: 0.75rem; text-transform: uppercase; color: var(--primary); font-weight: 800; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .prompt-text { font-size: 1.15rem; font-weight: 600; color: var(--text-main); line-height: 1.5; }
+
+        .hidden-bar { background: #f8fafc; color: var(--text-muted); padding: 12px; text-align: center; font-size: 0.9rem; font-weight: 500; border-bottom: 1px solid var(--border); cursor: pointer; user-select: none; transition: background 0.2s; }
+        .hidden-bar:hover { background: #f1f5f9; color: var(--primary); }
+        .hidden-bar.disabled { cursor: default; color: #cbd5e1; pointer-events: none; }
+
+        .target-wrapper { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border-bottom: 1px solid var(--border); overflow: hidden; }
+        .target-wrapper.collapsed { display: none; }
+        textarea { width: 100%; padding: 24px; border: none; font-family: inherit; font-size: 1rem; line-height: 1.6; resize: vertical; min-height: 140px; outline: none; background: #ffffff; color: var(--text-main);     transition: background-color 0.2s, opacity 0.2s;}
+        textarea::placeholder { color: #cbd5e1; }
+        /* Subtle Disabled State */
+textarea:disabled {
+    background-color: #f8fafc; /* Very light grey */
+    color: #cbd5e1;            /* Light text */
+    cursor: not-allowed;
+    box-shadow: none;
+}
+
+/* Specific styling for Recall Input when disabled */
+#recall-input:disabled {
+    background-color: #f1f5f9;
+    color: #94a3b8; /* Slightly darker so placeholder is visible */
+}
+        .control-bar { padding: 15px 24px; background: #ffffff; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .ctrl-group { display: flex; gap: 8px; align-items: center; }
+
+        .c-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 10px 18px; border-radius: 8px; border: none; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: 0.1s; }
+        .c-btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(100%); }
+        .c-btn:hover:not(:disabled) { transform: translateY(-1px); }
+        .c-btn-main { background: var(--primary); color: white; min-width: 140px; } .c-btn-main:hover:not(:disabled) { background: var(--primary-hover); }
+        .c-btn-sec { background: white; border: 1px solid var(--border); color: var(--text-main); } .c-btn-sec:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
+        .c-btn-nav { padding: 8px; background: transparent; color: var(--text-muted); font-size: 1.2rem; } .c-btn-nav:hover:not(:disabled) { color: var(--primary); background: #eef2ff; }
+
+        .btn-mic { width: 45px; height: 45px; padding: 0; background: #06b6d4; color: white; border-radius: 50%; font-size: 1.2rem; display:flex; align-items:center; justify-content:center; }
+        .btn-mic.recording { background: var(--danger); animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+        .recall-area { min-height: 180px; position: relative; background: #fcfcfc; }
+        .diff-view { padding: 24px; line-height: 1.6; font-size: 1rem; display: none; white-space: pre-wrap; } .diff-view.active { display: block; }
+        .diff-correct { background: #dcfce7; color: #15803d; padding: 2px 4px; border-radius: 4px; }
+        .diff-missing { background: #fee2e2; color: #b91c1c; padding: 2px 4px; border-radius: 4px; text-decoration: line-through; opacity: 0.8; }
+        .diff-extra { background: #fef9c3; color: #854d0e; text-decoration: underline; padding: 2px 4px; }
+        .score-pill { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; font-weight: 800; opacity: 0; transform: scale(0.9); transition: all 0.3s; } .score-pill.visible { opacity: 1; transform: scale(1); }
+
+        .history-container { display: none; }
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+        .hist-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; font-size: 0.9rem; border: 1px solid var(--border); }
+        .hist-table th, .hist-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); } .hist-table th { background: #f8fafc; color: var(--text-muted); }
+
+        /* MODALS */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px); display: none; justify-content: center; align-items: center; z-index: 100; }
+        .modal { background: white; padding: 0; border-radius: 12px; width: 90%; max-width: 700px; max-height: 85vh; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .modal-header { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .modal-body { padding: 20px; overflow-y: auto; }
+        .modal-footer { padding: 20px; border-top: 1px solid var(--border); background: #f9fafb; display: flex; justify-content: flex-end; gap: 10px; border-radius: 0 0 12px 12px; }
+        input[type="text"] { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 6px; margin-bottom: 15px; font-size: 1rem; }
+        
+        .catalog-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .catalog-item { border: 1px solid var(--border); padding: 15px; border-radius: 8px; cursor: pointer; background: #fafafa; transition: 0.1s; }
+        .catalog-item:hover { border-color: var(--primary); background: #fff; transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .cat-title { font-weight: 700; color: var(--primary); margin-bottom: 5px; }
+
+        .rev-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .rev-table td { padding: 8px; border-bottom: 1px solid var(--border); vertical-align: top; }
+        .rev-table tr:nth-child(even) { background: #f8fafc; }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    
+    <!-- SIDEBAR -->
+    <div class="sidebar" id="sidebar">
+        
+        <!-- View 1: LIBRARY -->
+        <div id="view-library" style="display: flex; flex-direction: column; height: 100%;">
+            <div class="sidebar-header">
+                <div class="sidebar-title">MY DECK LIBRARY</div>
+                <button class="btn-action primary" onclick="app.openUploadModal()">+ Create / Import Deck</button>
+                <button class="btn-action" onclick="app.openCatalogModal()">🌎 Browse Catalog</button>
+            </div>
+            <div class="sidebar-content" id="list-decks"></div>
+        </div>
+
+        <!-- View 2: ACTIVE DECK -->
+        <div id="view-deck" style="display: none; flex-direction: column; height: 100%;">
+            <div class="sidebar-header">
+                <div class="nav-back" onclick="app.showLibrary()">← Back to Library</div>
+                <div style="font-weight: 800; font-size: 1rem; color: var(--text-main); margin-bottom: 4px;" id="active-title">Deck Name</div>
+                <div class="sidebar-title" style="margin-bottom:0; text-transform: none; font-weight: 400;">
+                    Progress: <span id="deck-progress">0/0</span>
+                </div>
+                <div style="display: flex; gap: 8px; margin-top: 10px;">
+                    <button class="icon-btn" onclick="app.viewActiveRevision()">👁️ View List</button>
+                    <button class="icon-btn" onclick="app.shareActiveDeck()">🔗 Share</button>
+                </div>
+            </div>
+            <div class="sidebar-content" id="list-questions"></div>
+        </div>
+    </div>
+
+    <!-- MAIN PANE -->
+    <div class="main-pane">
+        
+        <div class="top-bar">
+            <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').style.display = document.getElementById('sidebar').style.display==='none'?'flex':'none'">☰</button>
+            <div class="brand">🧠 Recall Master</div>
+            <div class="mode-switch">
+                <button class="mode-btn active" id="mode-single" onclick="app.setMode('single')">Single</button>
+                <button class="mode-btn" id="mode-bulk" onclick="app.setMode('bulk')">Bulk Deck</button>
+            </div>
+        </div>
+
+        <div class="workspace">
+            
+            <div class="card">
+                <!-- 1. Prompt -->
+                <div class="prompt-header">
+                    <div class="prompt-label">
+                        <span id="prompt-label">PROMPT</span>
+                    </div>
+                    <div class="prompt-text" id="prompt-display">Loading...</div>
+                </div>
+
+                <!-- 2. Hidden Bar -->
+                <div class="hidden-bar" id="hidden-bar" onclick="app.toggleTarget()">
+                    🔒 Target Answer Hidden (Click to Peek)
+                </div>
+
+                <!-- 3. Target Input -->
+                <div class="target-wrapper collapsed" id="target-wrapper">
+                    <textarea id="target-input" placeholder="Enter target answer here..."></textarea>
+                </div>
+
+                <!-- 4. Controls -->
+                <div class="control-bar">
+                    <div class="ctrl-group">
+                        <button class="c-btn c-btn-nav" id="btn-prev" onclick="app.prevCard()" title="Previous">◀</button>
+                        <button class="c-btn c-btn-sec" id="btn-reset" onclick="app.resetAction()">🔄 Reset</button>
+                        <button class="c-btn c-btn-sec" id="btn-edit" onclick="app.editTarget()">✏️ Edit</button>
+                    </div>
+
+                    <button class="btn-mic" id="btn-mic" title="Toggle Mic">🎙️</button>
+
+                    <div class="ctrl-group">
+                        <button class="c-btn c-btn-main" id="btn-main" onclick="app.cycleAction()">Start Recall</button>
+                        <button class="c-btn c-btn-nav" id="btn-next" onclick="app.nextCard()" title="Next">▶</button>
+                    </div>
+                </div>
+
+                <!-- 5. Recall -->
+                <div class="recall-area">
+                    <textarea id="recall-input" placeholder="Type or speak your answer here..."></textarea>
+                    <div id="diff-view" class="diff-view"></div>
+                    <div id="score-pill" class="score-pill"></div>
+                </div>
+            </div>
+
+            <!-- Single Mode History -->
+            <div class="history-container" id="history-container">
+                <div class="history-header">
+                    <strong>Session History</strong>
+                    <button onclick="app.clearHistory()" style="color:var(--danger); background:none; border:none; cursor:pointer; font-weight:600;">Clear All</button>
+                </div>
+                <table class="hist-table">
+                    <tbody id="history-body"></tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: UPLOAD -->
+<div class="modal-overlay" id="upload-modal">
+    <div class="modal">
+        <div class="modal-header"><h3>📂 Create / Import Deck</h3><button onclick="app.closeModals()" style="border:none;background:none;font-size:1.5rem;cursor:pointer;">&times;</button></div>
+        <div class="modal-body">
+            <label style="font-weight:600; font-size:0.9rem;">Deck Name</label>
+            <input type="text" id="upload-name" placeholder="e.g. History Chapter 1">
+            <label style="font-weight:600; font-size:0.9rem;">JSON Data (Paste here)</label>
+            <textarea id="upload-text" rows="8" style="width:100%; border:1px solid var(--border); background:#f9fafb; padding:10px; font-family:monospace;" placeholder='[{"prompt":"Question 1", "target":"Answer 1"}, ...]'></textarea>
+        </div>
+        <div class="modal-footer">
+            <button class="c-btn c-btn-sec" onclick="app.closeModals()">Cancel</button>
+            <button class="c-btn c-btn-main" onclick="app.processUpload()">Save Deck</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL: CATALOG -->
+<div class="modal-overlay" id="catalog-modal">
+    <div class="modal">
+        <div class="modal-header"><h3>🌎 Global Deck Catalog</h3><button onclick="app.closeModals()" style="border:none;background:none;font-size:1.5rem;cursor:pointer;">&times;</button></div>
+        <div class="modal-body">
+            <p style="color:#666; font-size:0.9rem; margin-bottom:15px;">Select a deck to import it into your library.</p>
+            <div class="catalog-grid" id="catalog-list"></div>
+        </div>
+        <div class="modal-footer"><button class="c-btn c-btn-sec" onclick="app.closeModals()">Close</button></div>
+    </div>
+</div>
+
+<!-- MODAL: REVISION -->
+<div class="modal-overlay" id="revision-modal">
+    <div class="modal">
+        <div class="modal-header"><h3 id="rev-title" style="margin:0">Review</h3><button onclick="app.closeModals()" style="border:none;background:none;font-size:1.5rem;cursor:pointer;">&times;</button></div>
+        <div class="modal-body">
+            <table class="rev-table"><tbody id="rev-body"></tbody></table>
+        </div>
+        <div class="modal-footer"><button class="c-btn c-btn-sec" onclick="app.closeModals()">Close</button></div>
+    </div>
+</div>
+
+<script>
+/**
+ * RECALL MASTER v13 - STABLE NO PEEK
+ */
+
+// --- INTERNAL CATALOG DATA ---
+const INTERNAL_CATALOG = [
+    { name: "US Capitals", data: [{prompt:"California",target:"Sacramento"},{prompt:"Texas",target:"Austin"},{prompt:"New York",target:"Albany"},{prompt:"Florida",target:"Tallahassee"}] },
+    { name: "Basic Math", data: [{prompt:"12 * 12",target:"144"},{prompt:"Square root of 81",target:"9"},{prompt:"Pi (2 decimals)",target:"3.14"},{prompt:"10 ^ 3",target:"1000"}] },
+    { name: "Biology 101", data: [{prompt:"Powerhouse of the cell",target:"Mitochondria"},{prompt:"Process plants use to make food",target:"Photosynthesis"},{prompt:"Basic unit of life",target:"Cell"}] },
+    { name: "Web Dev Basics", data: [{prompt:"HTML stands for",target:"HyperText Markup Language"},{prompt:"CSS stands for",target:"Cascading Style Sheets"},{prompt:"JS stands for",target:"JavaScript"}] }
+];
+
+const app = {
+    // --- CONFIG ---
+    ALLOW_PEEK: false, // Set to false to disable peeking entirely
+
+    // --- STATE ---
+    mode: 'single', 
+    state: 'SETUP', 
+    library: [], 
+    activeDeck: null, 
+    currentCardIndex: -1,
+    recognition: null, 
+    isRecording: false,
+
+    el: {
+        // UI Sections
+        sidebarLib: document.getElementById('view-library'),
+        sidebarDeck: document.getElementById('view-deck'),
+        listDecks: document.getElementById('list-decks'),
+        listQuestions: document.getElementById('list-questions'),
+        
+        // Workspace
+        promptDisplay: document.getElementById('prompt-display'),
+        promptLabel: document.getElementById('prompt-label'),
+        targetWrapper: document.getElementById('target-wrapper'),
+        hiddenBar: document.getElementById('hidden-bar'),
+        targetInput: document.getElementById('target-input'),
+        recallInput: document.getElementById('recall-input'),
+        diffView: document.getElementById('diff-view'),
+        scorePill: document.getElementById('score-pill'),
+        
+        // Buttons
+        btnMain: document.getElementById('btn-main'),
+        btnReset: document.getElementById('btn-reset'),
+        btnEdit: document.getElementById('btn-edit'),
+        btnMic: document.getElementById('btn-mic'),
+        btnPrev: document.getElementById('btn-prev'),
+        btnNext: document.getElementById('btn-next'),
+        
+        // Toggles
+        modeSingle: document.getElementById('mode-single'),
+        modeBulk: document.getElementById('mode-bulk'),
+        
+        // Modals
+        mUpload: document.getElementById('upload-modal'),
+        mRev: document.getElementById('revision-modal'),
+        mCat: document.getElementById('catalog-modal')
+    },
+
+init() {
+        this.loadLibrary();
+        this.initSpeech();
+        
+        // Check URL Params
+        const params = new URLSearchParams(window.location.search);
+        
+        if(params.has('deck')) {
+            // CASE A: Loading a Global Deck via Short Link
+            const filename = params.get('deck');
+            this.fetchRemoteDeck(filename, true);
+        } 
+        else if(this.checkForURLImport()) {
+            // CASE B: Loading a compressed blob (legacy support)
+            // handled inside checkForURLImport
+        } 
+        else {
+            // CASE C: Default
+            this.setMode('single');
+        }
+        
+        this.updatePeek();
+    },
+
+    // --- LIBRARY SYSTEM ---
+    loadLibrary() {
+        const raw = localStorage.getItem('recall_lib_final');
+        this.library = raw ? JSON.parse(raw) : [];
+        this.renderDeckList();
+    },
+    saveLibrary() {
+        localStorage.setItem('recall_lib_final', JSON.stringify(this.library));
+    },
+
+    async fetchRemoteDeck(filename, isUrlImport) {
+        try {
+            // 1. Check if we already have this deck in library to avoid duplicates
+            const existing = this.library.find(d => d.filename === filename);
+            if (existing) {
+                this.openDeck(existing.id);
+                if(isUrlImport) window.history.replaceState({}, document.title, window.location.pathname);
+                return;
+            }
+
+            // 2. Fetch if new
+            const path = filename.includes('/') ? filename : 'decks/' + filename;
+            // Handle simulated environment where file might not exist physically
+            // In a real server, this fetches. In this demo, we check internal catalog first.
+            
+            let json = null;
+            let name = filename;
+
+            // Check Internal Catalog first (Simulated Server)
+            const internal = INTERNAL_CATALOG.find(d => d.filename === filename || (d.name.toLowerCase().replace(/ /g,'') + ".json") === filename);
+            
+            if (internal) {
+                json = internal.data;
+                name = internal.name;
+            } else {
+                // Actual Fetch
+                const res = await fetch(path);
+                if(!res.ok) throw new Error("Deck file not found on server.");
+                json = await res.json();
+                name = json.name || filename.replace('.json', '');
+                if(json.cards) json = json.cards; // Handle nested format
+            }
+
+            // 3. Create
+            const id = this.createDeck(name, json, filename);
+            if(id) this.openDeck(id);
+            
+            // 4. Clean URL
+            if(isUrlImport) window.history.replaceState({}, document.title, window.location.pathname);
+
+        } catch(e) {
+            alert("Could not load shared deck: " + e.message);
+            this.setMode('single');
+        }
+    },
+renderDeckList() {
+        this.el.listDecks.innerHTML = '';
+        if(this.library.length === 0) {
+            this.el.listDecks.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:30px;">Library Empty.<br>Click "+ Create" or<br>"Browse Catalog"</div>';
+            return;
+        }
+        this.library.forEach(d => {
+            // LOGIC: Is this Global or User?
+            const isGlobal = !!d.filename;
+            const shareBtnLabel = isGlobal ? "🔗 Link" : "📋 JSON";
+            const shareAction = isGlobal ? `app.shareDeck(${d.id})` : `app.exportDeck(${d.id})`;
+
+            const div = document.createElement('div');
+            div.className = 'deck-card';
+            div.innerHTML = `
+                <div class="deck-info" onclick="app.openDeck(${d.id})">
+                    <div class="deck-name">${d.name}</div>
+                    <div class="deck-meta">${d.cards.length} Cards ${isGlobal ? '• 🌎 Global' : '• 👤 User'}</div>
+                </div>
+                <div class="deck-actions">
+                    <button class="icon-btn btn-play" onclick="app.openDeck(${d.id})">▶ Play</button>
+                    <button class="icon-btn" onclick="app.viewRevision(${d.id})">👁️ View</button>
+                    <button class="icon-btn" onclick="${shareAction}">${shareBtnLabel}</button>
+                    <button class="icon-btn btn-del" onclick="app.deleteDeck(${d.id})">🗑️</button>
+                </div>
+            `;
+            this.el.listDecks.appendChild(div);
+        });
+    },
+createDeck(name, rawCards, filename = null) {
+        try {
+            // Normalize card format
+            const cards = rawCards.map((x,i) => ({
+                id: i,
+                prompt: x.prompt || x.p || "Q"+(i+1),
+                target: x.target || x.t || "",
+                score: null
+            }));
+            
+            if(!cards.length) throw new Error("Deck is empty");
+
+            // STORE FILENAME IF PROVIDED (Marks it as Global)
+            const newDeck = { 
+                id: Date.now(), 
+                name: name || "Untitled Deck", 
+                cards,
+                filename: filename // <--- Crucial Addition
+            };
+
+            this.library.unshift(newDeck);
+            this.saveLibrary();
+            this.renderDeckList();
+            this.closeModals();
+            return newDeck.id;
+        } catch(e) {
+            alert("Error creating deck: " + e.message);
+            return null;
+        }
+    },
+    deleteDeck(id) {
+        if(!confirm("Delete this deck?")) return;
+        this.library = this.library.filter(d => d.id !== id);
+        this.saveLibrary();
+        if(this.activeDeck && this.activeDeck.id === id) this.showLibrary();
+        else this.renderDeckList();
+    },
+
+    // --- NAVIGATION LOGIC ---
+    showLibrary() {
+        this.activeDeck = null;
+        this.el.sidebarLib.style.display = 'flex';
+        this.el.sidebarDeck.style.display = 'none';
+        this.renderDeckList();
+        this.el.promptDisplay.textContent = "Select a deck.";
+        this.resetAction();
+    },
+
+    openDeck(id) {
+        this.activeDeck = this.library.find(d => d.id === id);
+        this.el.sidebarLib.style.display = 'none';
+        this.el.sidebarDeck.style.display = 'flex';
+        document.getElementById('active-title').textContent = this.activeDeck.name;
+        this.setMode('bulk'); 
+        this.loadCard(0);
+        this.renderQuestionList();
+    },
+
+    setMode(m) {
+        this.mode = m;
+        this.el.modeSingle.className = m==='single' ? 'mode-btn active' : 'mode-btn';
+        this.el.modeBulk.className = m==='bulk' ? 'mode-btn active' : 'mode-btn';
+
+        const isBulk = m === 'bulk';
+        const sidebar = document.getElementById('sidebar');
+        
+        if(window.innerWidth > 800) {
+            sidebar.style.display = isBulk ? 'flex' : 'none';
+            document.querySelector('.app-container').style.gridTemplateColumns = isBulk ? '350px 1fr' : '1fr';
+        } else {
+            sidebar.style.display = 'none';
+        }
+
+        document.getElementById('history-container').style.display = isBulk ? 'none' : 'block';
+        this.el.btnPrev.style.display = isBulk ? 'inline-flex' : 'none';
+        this.el.btnNext.style.display = isBulk ? 'inline-flex' : 'none';
+
+        if(m === 'single') {
+            document.getElementById('prompt-label').textContent = "SINGLE ENTRY";
+            this.el.promptDisplay.textContent = "Single Entry Mode";
+            this.el.targetInput.value = "";
+            this.resetAction();
+        } else {
+            document.getElementById('prompt-label').textContent = "DECK CARD";
+            if(this.activeDeck) this.loadCard(this.currentCardIndex);
+            else if(this.library.length === 0) this.showLibrary(); 
+        }
+    },
+
+    // --- CARD LOGIC ---
+    renderQuestionList() {
+        if(!this.activeDeck) return;
+        const list = this.el.listQuestions;
+        list.innerHTML = '';
+        
+        const completed = this.activeDeck.cards.filter(c => c.score !== null).length;
+        document.getElementById('deck-progress').textContent = `${completed}/${this.activeDeck.cards.length}`;
+
+        this.activeDeck.cards.forEach((c, idx) => {
+            const div = document.createElement('div');
+            div.className = `question-item ${idx === this.currentCardIndex ? 'active' : ''}`;
+            div.onclick = () => this.loadCard(idx);
+            
+            let bClass = 'badge-none', bText = '-';
+            if (c.score !== null) {
+                bClass = c.score >= 80 ? 'badge-good' : 'badge-bad';
+                bText = c.score + '%';
+            }
+
+            div.innerHTML = `<span>${idx+1}. ${c.prompt}</span> <span class="badge ${bClass}">${bText}</span>`;
+            list.appendChild(div);
+        });
+    },
+
+    loadCard(idx) {
+        if(!this.activeDeck || idx < 0 || idx >= this.activeDeck.cards.length) return;
+        this.stopMic();
+        this.currentCardIndex = idx;
+        const c = this.activeDeck.cards[idx];
+        this.el.promptDisplay.textContent = c.prompt;
+        this.el.targetInput.value = c.target;
+        this.resetAction();
+        this.renderQuestionList();
+    },
+
+    nextCard() {
+        if(this.currentCardIndex < this.activeDeck.cards.length - 1) this.loadCard(this.currentCardIndex + 1);
+        else alert("End of deck reached.");
+    },
+    prevCard() {
+        if(this.currentCardIndex > 0) this.loadCard(this.currentCardIndex - 1);
+    },
+
+    // --- ACTION CYCLE ---
+    cycleAction() {
+        if (this.state === 'SETUP') {
+            if (this.mode === 'single' && !this.el.targetInput.value.trim()) return alert("Enter target text.");
+            if (this.mode === 'bulk' && !this.activeDeck) return alert("Select a deck first.");
+            
+            this.setState('RECALL');
+            this.el.recallInput.focus();
+
+        } else if (this.state === 'RECALL') {
+            if(!this.el.recallInput.value.trim()) return alert("Enter your answer.");
+            this.stopMic();
+            this.calculateScore();
+            this.setState('REVIEW');
+
+        } else if (this.state === 'REVIEW') {
+            if (this.mode === 'bulk') this.nextCard();
+            else this.resetAction();
+        }
+    },
+
+    resetAction() {
+        this.stopMic();
+        this.setState('SETUP');
+        this.el.recallInput.value = '';
+        this.el.diffView.innerHTML = '';
+        this.el.scorePill.classList.remove('visible');
+    },
+
+setState(s) {
+        this.state = s;
+        
+        // 1. SETUP MODE (Editing Target)
+        if (s === 'SETUP') {
+            // Target: Visible & Editable
+            this.el.targetWrapper.classList.remove('collapsed');
+            this.el.hiddenBar.style.display = 'none';
+            this.el.targetInput.disabled = false; 
+
+            // Recall: Visible but Disabled
+            this.el.recallInput.style.display = 'block';
+            this.el.recallInput.disabled = true;
+            this.el.recallInput.placeholder = "Click 'Start Recall' to type here...";
+            
+            // Buttons/Views
+            this.el.btnMain.textContent = 'Start Recall';
+            this.el.btnMain.className = 'c-btn c-btn-main';
+            this.el.btnMain.style.backgroundColor = 'var(--primary)';
+            this.el.diffView.classList.remove('active');
+            this.el.btnEdit.disabled = false;
+        } 
+        
+        // 2. RECALL MODE (Typing Answer)
+        else if (s === 'RECALL') {
+            // Target: Hidden (or Peekable) & Read-Only
+            this.el.targetWrapper.classList.add('collapsed');
+            this.el.hiddenBar.style.display = 'block';
+            this.el.targetInput.disabled = true; // Prevent editing target while recalling
+
+            // Recall: Active
+            this.el.recallInput.style.display = 'block';
+            this.el.recallInput.disabled = false;
+            this.el.recallInput.placeholder = "Type or speak your answer here...";
+            
+            // Buttons/Views
+            this.el.btnMain.textContent = 'Check Answer';
+            this.el.btnMain.className = 'c-btn c-btn-main'; 
+            this.el.btnMain.style.backgroundColor = 'var(--success)';
+            this.el.diffView.classList.remove('active');
+            this.el.btnEdit.disabled = true;
+        } 
+        
+        // 3. REVIEW MODE (Checking Results)
+        else { 
+            // Target: Hidden (or Peekable)
+            this.el.targetWrapper.classList.add('collapsed');
+            this.el.hiddenBar.style.display = 'block';
+            this.el.targetInput.disabled = true;
+
+            // Recall: Hidden (Replaced by Diff)
+            this.el.recallInput.style.display = 'none';
+            
+            // Buttons/Views
+            this.el.btnMain.textContent = this.mode === 'bulk' ? 'Next Card ▶' : 'Retry 🔄';
+            this.el.btnMain.style.backgroundColor = 'var(--primary)';
+            this.el.diffView.classList.add('active');
+            this.el.scorePill.classList.add('visible');
+            this.el.btnEdit.disabled = false;
+        }
+        
+        this.el.btnMic.disabled = (s !== 'RECALL');
+        this.updatePeek();
+    },
+
+    toggleTarget() { if(this.ALLOW_PEEK) this.el.targetWrapper.classList.toggle('collapsed'); },
+    editTarget() { this.el.targetWrapper.classList.remove('collapsed'); this.el.hiddenBar.style.display = 'none'; },
+    
+updatePeek() {
+        const allowed = this.ALLOW_PEEK;
+        
+        // Update visual style of the bar
+        this.el.hiddenBar.className = allowed ? 'hidden-bar' : 'hidden-bar disabled';
+        this.el.hiddenBar.innerText = allowed ? "🔒 Target Answer Hidden (Click to Peek)" : "🔒 Target Answer Hidden";
+        
+        // BUG FIX: Only force collapse if peeking is off AND we are NOT in setup mode.
+        // In 'SETUP' mode, the box must always be visible so the user can type.
+        if (!allowed && this.state !== 'SETUP') {
+            this.el.targetWrapper.classList.add('collapsed');
+        }
+    },
+    // --- IMPORT / EXPORT ---
+    openUploadModal() {
+        document.getElementById('upload-name').value = '';
+        document.getElementById('upload-text').value = '';
+        this.el.mUpload.style.display = 'flex';
+    },
+
+    processUpload() {
+        try {
+            const name = document.getElementById('upload-name').value.trim();
+            const json = JSON.parse(document.getElementById('upload-text').value);
+            const id = this.createDeck(name, json);
+            if(id) this.openDeck(id);
+        } catch(e) { alert("Invalid JSON"); }
+    },
+
+    openCatalogModal() {
+        const list = document.getElementById('catalog-list');
+        list.innerHTML = 'Loading...';
+        
+        // Try fetch local catalogue.json, fallback to internal
+        fetch('catalogue.json').then(r=>r.json()).then(d=>this.renderCatalogGrid(d, true)).catch(()=>this.renderCatalogGrid(INTERNAL_CATALOG, false));
+    },
+
+    renderCatalogGrid(data, isExternal) {
+        this.el.mCat.style.display = 'flex';
+        const list = document.getElementById('catalog-list');
+        list.innerHTML = data.map((d, i) => `
+            <div class="catalog-item" onclick="app.importCatalog(${i}, ${isExternal}, '${d.filename}')">
+                <div class="cat-title">${d.name}</div>
+                <div style="font-size:0.85rem; color:#64748b;">${isExternal ? 'External File' : d.data.length + ' Cards'}</div>
+            </div>
+        `).join('');
+        this.catalogCache = data; 
+    },
+
+async importCatalog(idx, isExternal, filename) {
+        // Get metadata
+        const meta = this.catalogCache[idx];
+        const fname = isExternal ? filename : meta.filename;
+
+        if (!isExternal) {
+            // Internal/Simulated import
+            // Pass meta.filename so we know it's a global deck
+            const id = this.createDeck(meta.name, meta.data, meta.filename); 
+            if(id) this.openDeck(id);
+        } else {
+            // External Fetch
+            try {
+                const path = fname.includes('/') ? fname : 'decks/' + fname;
+                const res = await fetch(path);
+                if(!res.ok) throw new Error("File not found: " + path);
+                const json = await res.json();
+                
+                // Pass fname so we know it's a global deck
+                const id = this.createDeck(meta.name, json, fname); 
+                if(id) this.openDeck(id);
+            } catch(e) { alert("Load failed: " + e.message); }
+        }
+        this.closeModals();
+    },
+
+shareActiveDeck() { 
+        if(!this.activeDeck) return;
+        if(this.activeDeck.filename) this.shareDeck(this.activeDeck.id);
+        else this.exportDeck(this.activeDeck.id);
+    },
+
+    // 1. SHARE LINK (Only for Global Decks)
+    shareDeck(id) {
+        const deck = this.library.find(d => d.id === id);
+        if(!deck.filename) return alert("This is a user deck. Use Export instead.");
+
+        // Clean, Short URL using the filename ID
+        const url = window.location.href.split('?')[0] + '?deck=' + deck.filename;
+        
+        prompt("Copy this Short Link to share:", url);
+    },
+
+    // 2. EXPORT JSON (For User Decks)
+    exportDeck(id) {
+        const deck = this.library.find(d => d.id === id);
+        const mini = deck.cards.map(c => ({ prompt: c.prompt, target: c.target }));
+        const json = JSON.stringify(mini, null, 2); // Pretty print
+        
+        // reuse upload modal to show the data
+        document.getElementById('upload-name').value = deck.name;
+        document.getElementById('upload-text').value = json;
+        this.el.mUpload.style.display = 'flex';
+        
+        // Select text for easy copy
+        setTimeout(() => {
+            document.getElementById('upload-text').select();
+            document.execCommand('copy');
+            alert("Deck JSON copied to clipboard!");
+        }, 100);
+    },
+    shareDeck(id) {
+        const deck = this.library.find(d => d.id === id);
+        const mini = deck.cards.map(c => ({ p: c.prompt, t: c.target }));
+        const json = JSON.stringify(mini);
+        const encoded = btoa(unescape(encodeURIComponent(json)));
+        const url = window.location.href.split('?')[0] + '?import=' + encoded + '&name=' + encodeURIComponent(deck.name);
+        prompt("Copy this URL to share:", url);
+    },
+
+    checkForURLImport() {
+        const params = new URLSearchParams(window.location.search);
+        if(params.has('import')) {
+            try {
+                const name = params.get('name') || "Shared Deck";
+                const jsonStr = decodeURIComponent(escape(atob(params.get('import'))));
+                const json = JSON.parse(jsonStr);
+                if(confirm(`Import shared deck: "${name}"?`)) {
+                    const id = this.createDeck(name, json);
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    if(id) {
+                        this.openDeck(id);
+                        return true;
+                    }
+                }
+            } catch(e) { console.error(e); }
+        }
+        return false;
+    },
+
+    // --- HELPERS ---
+    viewActiveRevision() { if(this.activeDeck) this.viewRevision(this.activeDeck.id); },
+    viewRevision(id) {
+        const deck = this.library.find(d => d.id === id);
+        document.getElementById('rev-title').textContent = "Review: " + deck.name;
+        document.getElementById('rev-body').innerHTML = deck.cards.map(c => `<tr><td style="font-weight:600; width:30%;">${c.prompt}</td><td>${c.target}</td></tr>`).join('');
+        this.el.mRev.style.display = 'flex';
+    },
+    
+    // 1. Save to LocalStorage and Render
+    addToHistory(t, s, html) {
+        const history = JSON.parse(localStorage.getItem('recall_hist_v12') || "[]");
+        const newItem = {
+            id: Date.now(),
+            date: new Date().toLocaleTimeString(),
+            target: t,
+            score: s,
+            diff: html
+        };
+        history.unshift(newItem);
+        // Keep last 50 items
+        localStorage.setItem('recall_hist_v12', JSON.stringify(history.slice(0, 50)));
+        this.loadHistory();
+    },
+    // 2. Render the Table
+    loadHistory() {
+        const history = JSON.parse(localStorage.getItem('recall_hist_v12') || "[]");
+        const tbody = document.getElementById('history-body');
+        tbody.innerHTML = '';
+
+        history.forEach((item, index) => {
+            const row = tbody.insertRow();
+            const targetPreview = item.target.length > 30 ? item.target.substring(0, 30) + "..." : item.target;
+            const scoreColor = item.score >= 80 ? 'var(--success)' : 'var(--danger)';
+
+            row.innerHTML = `
+                <td>${index + 1}</td>
+                <td style="font-size:0.85rem; color:#64748b;">${item.date}</td>
+                <td title="${item.target.replace(/"/g, '&quot;')}">${targetPreview}</td>
+                <td style="font-weight:700; color:${scoreColor};">${item.score}%</td>
+                <td style="text-align: right;">
+                    <button class="c-btn-nav" onclick="app.viewHistoryItem(${index})" title="View Details" style="font-size:0.8rem; color:var(--primary);">View</button>
+                    <button class="c-btn-nav" onclick="app.retakeHistoryItem(${index})" title="Retake" style="font-size:0.8rem;">Retake</button>
+                    <button class="c-btn-nav" onclick="app.deleteHistoryItem(${index})" title="Delete" style="font-size:0.8rem; color:var(--danger);">Del</button>
+                </td>
+            `;
+        });
+    },
+     // 3. Clear All
+    clearHistory() {
+        if(confirm("Clear entire session history?")) {
+            localStorage.removeItem('recall_hist_v12');
+            this.loadHistory();
+        }
+    },
+    closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none'); },
+    viewHistoryItem(index) {
+        const history = JSON.parse(localStorage.getItem('recall_hist_v12'));
+        const item = history[index];
+        
+        document.getElementById('rev-title').textContent = "Result Details";
+        // Reuse the Revision Modal for displaying single history details
+        document.getElementById('rev-body').innerHTML = `
+            <tr><td style="width:100px; font-weight:600;">Date</td><td>${item.date}</td></tr>
+            <tr><td style="font-weight:600;">Target</td><td>${item.target}</td></tr>
+            <tr><td style="font-weight:600;">Your Score</td><td style="font-weight:700;">${item.score}%</td></tr>
+            <tr><td colspan="2" style="border-top:1px solid #eee; padding-top:10px;"><div class="diff-view active" style="border:1px solid #eee; padding:10px; border-radius:6px;">${item.diff}</div></td></tr>
+        `;
+        this.el.mRev.style.display = 'flex';
+    },
+
+    retakeHistoryItem(index) {
+        const history = JSON.parse(localStorage.getItem('recall_hist_v12'));
+        const item = history[index];
+        
+        this.el.targetInput.value = item.target;
+        this.resetAction();
+        // Scroll to top to focus on input
+        this.el.targetInput.scrollIntoView({ behavior: 'smooth' });
+    },
+
+    deleteHistoryItem(index) {
+        if(!confirm("Delete this entry?")) return;
+        const history = JSON.parse(localStorage.getItem('recall_hist_v12'));
+        history.splice(index, 1);
+        localStorage.setItem('recall_hist_v12', JSON.stringify(history));
+        this.loadHistory();
+    },
+    // --- SCORING (LCS) ---
+    calculateScore() {
+        const t = this.el.targetInput.value;
+        const i = this.el.recallInput.value;
+        const norm = s => s.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g,"").toLowerCase().trim().split(/\s+/).filter(w=>w);
+        const tW = norm(t), iW = norm(i);
+        
+        const sim = (a, b) => {
+            if (a === b) return 1; if (Math.abs(a.length - b.length) > 3) return 0;
+            const m = []; for (let x=0; x<=a.length; x++) m[x] = [x]; for (let y=0; y<=b.length; y++) m[0][y] = y;
+            for (let x=1; x<=a.length; x++) for (let y=1; y<=b.length; y++) m[x][y] = Math.min(m[x-1][y]+1, m[x][y-1]+1, m[x-1][y-1]+(a[x-1]===b[y-1]?0:1));
+            const s = 1.0 - (m[a.length][b.length] / Math.max(a.length, b.length)); return s >= 0.7 ? s : 0;
+        };
+
+        const dp = Array(tW.length+1).fill().map(() => Array(iW.length+1).fill(0));
+        for (let r=1; r<=tW.length; r++) for (let c=1; c<=iW.length; c++) dp[r][c] = (sim(tW[r-1], iW[c-1]) > 0) ? sim(tW[r-1], iW[c-1]) + dp[r-1][c-1] : Math.max(dp[r-1][c], dp[r][c-1]);
+        
+        let r=tW.length, c=iW.length, fb=[], score=0;
+        while (r>0 || c>0) {
+            const s = (r>0 && c>0) ? sim(tW[r-1], iW[c-1]) : 0;
+            if (r>0 && c>0 && s>0) { fb.unshift({s:'correct', txt:iW[c-1], tgt:tW[r-1]}); score += s; r--; c--; }
+            else if (c>0 && (r===0 || dp[r][c-1] >= dp[r-1][c])) { fb.unshift({s:'extra', txt:iW[c-1]}); c--; }
+            else { fb.unshift({s:'missing', tgt:tW[r-1]}); r--; }
+        }
+        
+        const pct = Math.max(0, Math.round((score / (tW.length||1)) * 100));
+
+        // FIX: Define 'html' variable before using it
+        const html = fb.map(f => {
+            if (f.s === 'correct') return `<span class="diff-correct">${f.txt}</span>`;
+            if (f.s === 'extra') return `<span class="diff-extra">${f.txt}</span>`;
+            return `<span class="diff-missing" data-word="${f.tgt}">${f.tgt}</span>`;
+        }).join(' ');
+
+        this.el.diffView.innerHTML = html;
+        this.el.scorePill.innerHTML = `<span style="color:${pct>=80?'var(--success)':'var(--danger)'}">${pct}%</span>`;
+
+        if (this.mode === 'single') {
+            this.addToHistory(t, pct, html); // Now 'html' exists
+        } else {
+            this.activeDeck.cards[this.currentCardIndex].score = pct;
+            this.saveLibrary();
+        }
+    },
+    // --- MIC ---
+    initSpeech() {
+        if(!('webkitSpeechRecognition' in window)) { this.el.btnMic.style.display='none'; return; }
+        const r = new webkitSpeechRecognition();
+        r.continuous = true; r.interimResults = true; r.lang = 'en-US';
+        r.onstart = () => { this.isRecording=true; this.el.btnMic.classList.add('recording'); };
+        r.onend = () => { this.isRecording=false; this.el.btnMic.classList.remove('recording'); };
+        r.onresult = (e) => { if(e.results[e.results.length-1].isFinal) { const t = e.results[e.results.length-1][0].transcript; const c = this.el.recallInput.value; this.el.recallInput.value = c + (c && !c.endsWith(' ')?' ':'') + t; this.el.recallInput.scrollTop = this.el.recallInput.scrollHeight; }};
+        this.recognition = r; this.el.btnMic.onclick = () => { if(this.isRecording) r.stop(); else { this.el.recallInput.focus(); r.start(); } };
+    },
+    stopMic() { if(this.isRecording) this.recognition.stop(); }
+};
+
+app.init();
+</script>
+</body>
+</html>

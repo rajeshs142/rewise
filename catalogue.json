@@ -1,0 +1,5 @@
+[
+  { "name": "Physics Definitions", "filename": "physics_definitions.json", "description": "Class 10 cbse physics definitions" },
+  { "name": "Chemistry Definitions", "filename": "chemistry_definitions.json", "description": "Class 10 cbse Chemistry definitions" },
+  { "name": "Biology Definitions", "filename": "biology_definitions.json", "description": "Class 10 cbse Biology definitions" }
+]
