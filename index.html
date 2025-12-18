@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recall Master | Focus</title>
+    <title>Rewise | Focus</title>
     <style>
         :root {
             --primary: #4f46e5;
@@ -162,8 +162,8 @@ textarea:disabled {
         .c-btn-sec { background: white; border: 1px solid var(--border); color: var(--text-main); } .c-btn-sec:hover:not(:disabled) { background: #f8fafc; border-color: #cbd5e1; }
         .c-btn-nav { padding: 8px; background: transparent; color: var(--text-muted); font-size: 1.2rem; } .c-btn-nav:hover:not(:disabled) { color: var(--primary); background: #eef2ff; }
 
-        .btn-mic { width: 45px; height: 45px; padding: 0; background: #06b6d4; color: white; border-radius: 50%; font-size: 1.2rem; display:flex; align-items:center; justify-content:center; }
-        .btn-mic.recording { background: var(--danger); animation: pulse 1.5s infinite; }
+        .btn-mic { width: 45px; height: 45px; padding: 0; background: white; color: white; border-radius: 50%; font-size: 1.2rem; display:flex; align-items:center; justify-content:center; }
+        .btn-mic.recording { border-width: 6px; border-color: red; background: white; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
         .recall-area { min-height: 180px; position: relative; background: #fcfcfc; }
@@ -235,7 +235,7 @@ textarea:disabled {
         
         <div class="top-bar">
             <button class="mobile-menu-btn" onclick="document.getElementById('sidebar').style.display = document.getElementById('sidebar').style.display==='none'?'flex':'none'">☰</button>
-            <div class="brand">🧠 Recall Master</div>
+            <div class="brand">🧠 Rewise</div>
             <div class="mode-switch">
                 <button class="mode-btn active" id="mode-single" onclick="app.setMode('single')">Single</button>
                 <button class="mode-btn" id="mode-bulk" onclick="app.setMode('bulk')">Bulk Deck</button>
@@ -344,7 +344,7 @@ textarea:disabled {
 
 <script>
 /**
- * RECALL MASTER v13 - STABLE NO PEEK
+ * Rewise v13 - STABLE NO PEEK
  */
 
 // --- INTERNAL CATALOG DATA ---
@@ -924,8 +924,8 @@ addToHistory(t, s, html) {
                 <td style="color:${item.s >= 80 ? 'var(--success)' : 'var(--danger)'}; font-weight:bold;">${item.s}%</td>
                 <td style="text-align:right;">
                     <!-- Added View / Delete buttons -->
-                    <button onclick='app.viewHistoryItem(${index})' style="border:none; background:none; cursor:pointer; margin-right:5px;">👁️</button>
-                    <button onclick='app.deleteHistoryItem(${index})' style="color:var(--danger); border:none; background:none; cursor:pointer;">🗑️</button>
+                    <button onclick='app.viewHistoryItem(${index})' style="border:none; background:none; cursor:pointer; margin-right:5px;">View</button>
+                    <button onclick='app.deleteHistoryItem(${index})' style="color:var(--danger); border:none; background:none; cursor:pointer;">Delete</button>
                 </td>
             `;
         });
