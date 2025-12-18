@@ -1,0 +1,62 @@
+[
+  {
+    "prompt": "I want coffee",
+    "target": "Enakku coffee venum"
+  },
+  {
+    "prompt": "I don't want tea",
+    "target": "Enakku tea venaam"
+  },
+  {
+    "prompt": "I am coming now",
+    "target": "Naan ippo varen"
+  },
+  {
+    "prompt": "You go tomorrow",
+    "target": "Neenga naalaiku ponga"
+  },
+  {
+    "prompt": "Where is the bus?",
+    "target": "Bus enga irukku?"
+  },
+  {
+    "prompt": "Give me water",
+    "target": "Enakku water kudunga"
+  },
+  {
+    "prompt": "This is very good",
+    "target": "Idhu romba nalla-irukku"
+  },
+  {
+    "prompt": "That is not good",
+    "target": "Adhu nalla illa"
+  },
+  {
+    "prompt": "You speak English",
+    "target": "Neenga English pesunga"
+  },
+  {
+    "prompt": "Wait outside please",
+    "target": "Please veliya kaathirunga"
+  },
+  {
+    "prompt": "Come inside house",
+    "target": "House ulla vaanga"
+  },
+  {
+    "prompt": "Go to office",
+    "target": "Office-ku ponga"
+  },
+  {
+    "prompt": "I drank milk",
+    "target": "Naan milk kudichen"
+  },
+  {
+    "prompt": "Did you eat?",
+    "target": "Neenga saapiteengala?"
+  },
+  {
+    "prompt": "I am fine",
+    "target": "Naan nalla irukken"
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "prompt": "Can I come in?",
+    "target": "Naan ulla varalaama?"
+  },
+  {
+    "prompt": "Can I go now?",
+    "target": "Naan ippo polama?"
+  },
+  {
+    "prompt": "How are you?",
+    "target": "Neenga eppadi irukeenga?"
+  },
+  {
+    "prompt": "I know Tamil",
+    "target": "Enakku Tamil theriyum"
+  },
+  {
+    "prompt": "I don't know Hindi",
+    "target": "Enakku Hindi theriyaadhu"
+  },
+  {
+    "prompt": "I like movies",
+    "target": "Enakku movies pudikkum"
+  },
+  {
+    "prompt": "Bus is coming",
+    "target": "Bus vandhuttu irukku"
+  },
+  {
+    "prompt": "Don't tell lies",
+    "target": "Lies sollaadheenga"
+  },
+  {
+    "prompt": "Come to my place",
+    "target": "En place-ku vaanga"
+  },
+  {
+    "prompt": "Give money tomorrow",
+    "target": "Money naalaiku kudunga"
+  },
+  {
+    "prompt": "What is the time?",
+    "target": "Time enna ippo?"
+  },
+  {
+    "prompt": "Nothing is there",
+    "target": "Anga onnum illa"
+  },
+  {
+    "prompt": "I understood well",
+    "target": "Enakku nalla purinjidhu"
+  },
+  {
+    "prompt": "Why are you shouting?",
+    "target": "Yen neenga kathuringa?"
+  },
+  {
+    "prompt": "Speak a little louder",
+    "target": "Konjam sathama pesunga"
+  }
+]

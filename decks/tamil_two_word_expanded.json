@@ -1,0 +1,62 @@
+[
+  {
+    "prompt": "Want coffee",
+    "target": "Coffee venum"
+  },
+  {
+    "prompt": "Don't want sugar",
+    "target": "Sugar venaam"
+  },
+  {
+    "prompt": "No money / Money not there",
+    "target": "Money illa"
+  },
+  {
+    "prompt": "Not good",
+    "target": "Nalla illa"
+  },
+  {
+    "prompt": "It is good",
+    "target": "Nalla irukku"
+  },
+  {
+    "prompt": "I am coming",
+    "target": "Naan varen"
+  },
+  {
+    "prompt": "I am going",
+    "target": "Naan poren"
+  },
+  {
+    "prompt": "You come",
+    "target": "Neenga vaanga"
+  },
+  {
+    "prompt": "You go",
+    "target": "Neenga ponga"
+  },
+  {
+    "prompt": "Don't forget",
+    "target": "Marakkaadheenga"
+  },
+  {
+    "prompt": "Don't speak",
+    "target": "Pesaadheenga"
+  },
+  {
+    "prompt": "Don't worry",
+    "target": "Kavalapadaadheenga"
+  },
+  {
+    "prompt": "Speak truth",
+    "target": "Unmai pesunga"
+  },
+  {
+    "prompt": "What happened?",
+    "target": "Enna aachu?"
+  },
+  {
+    "prompt": "Who is that?",
+    "target": "Yaaru adhu?"
+  }
+]

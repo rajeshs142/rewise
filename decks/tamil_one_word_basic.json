@@ -1,0 +1,102 @@
+[
+  {
+    "prompt": "Come",
+    "target": "Vaanga"
+  },
+  {
+    "prompt": "Go",
+    "target": "Ponga"
+  },
+  {
+    "prompt": "Sit",
+    "target": "Ukkarunga"
+  },
+  {
+    "prompt": "Tell",
+    "target": "Sollunga"
+  },
+  {
+    "prompt": "Eat",
+    "target": "Saapidunga"
+  },
+  {
+    "prompt": "Give",
+    "target": "Kudunga"
+  },
+  {
+    "prompt": "Take",
+    "target": "Edunga"
+  },
+  {
+    "prompt": "Wait",
+    "target": "Kaathirunga"
+  },
+  {
+    "prompt": "Look / See",
+    "target": "Paarunga"
+  },
+  {
+    "prompt": "Leave it / Let go",
+    "target": "Vidunga"
+  },
+  {
+    "prompt": "What?",
+    "target": "Enna?"
+  },
+  {
+    "prompt": "Where?",
+    "target": "Enga?"
+  },
+  {
+    "prompt": "Why?",
+    "target": "Yen?"
+  },
+  {
+    "prompt": "When?",
+    "target": "Eppo?"
+  },
+  {
+    "prompt": "Who?",
+    "target": "Yaaru?"
+  },
+  {
+    "prompt": "Yes",
+    "target": "Aama"
+  },
+  {
+    "prompt": "No / Not there",
+    "target": "Illa"
+  },
+  {
+    "prompt": "Okay",
+    "target": "Seri"
+  },
+  {
+    "prompt": "Enough",
+    "target": "Podhum"
+  },
+  {
+    "prompt": "Want",
+    "target": "Venum"
+  },
+  {
+    "prompt": "Don't want",
+    "target": "Venaam"
+  },
+  {
+    "prompt": "I know",
+    "target": "Theriyum"
+  },
+  {
+    "prompt": "I don't know",
+    "target": "Theriyaadhu"
+  },
+  {
+    "prompt": "Really?",
+    "target": "Nejama?"
+  },
+  {
+    "prompt": "Understood?",
+    "target": "Purinjidha?"
+  }
+]

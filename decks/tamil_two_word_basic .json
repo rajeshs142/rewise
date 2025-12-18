@@ -1,0 +1,62 @@
+[
+  {
+    "prompt": "Give water",
+    "target": "Water kudunga"
+  },
+  {
+    "prompt": "Open door",
+    "target": "Door thoranga"
+  },
+  {
+    "prompt": "Close window",
+    "target": "Window moodunga"
+  },
+  {
+    "prompt": "Eat food",
+    "target": "Food saapidunga"
+  },
+  {
+    "prompt": "Drink coffee",
+    "target": "Coffee kudiyunga"
+  },
+  {
+    "prompt": "Take money",
+    "target": "Money edunga"
+  },
+  {
+    "prompt": "Stop car",
+    "target": "Car nillunga"
+  },
+  {
+    "prompt": "Watch movie",
+    "target": "Movie paarunga"
+  },
+  {
+    "prompt": "Where is bus?",
+    "target": "Bus enga?"
+  },
+  {
+    "prompt": "What is time?",
+    "target": "Time enna?"
+  },
+  {
+    "prompt": "Is ticket there?",
+    "target": "Ticket irukka?"
+  },
+  {
+    "prompt": "Come inside",
+    "target": "Ulla vaanga"
+  },
+  {
+    "prompt": "Go outside",
+    "target": "Veliya ponga"
+  },
+  {
+    "prompt": "Come fast",
+    "target": "Seekiram vaanga"
+  },
+  {
+    "prompt": "Go slowly",
+    "target": "Medhuva ponga"
+  }
+]
