@@ -402,31 +402,29 @@ const app = {
         mRev: document.getElementById('revision-modal'),
         mCat: document.getElementById('catalog-modal')
     },
-
 init() {
         this.loadLibrary();
+                this.loadHistory();
         this.initSpeech();
         
-        // Check URL Params
-        const params = new URLSearchParams(window.location.search);
-        
-        if(params.has('deck')) {
-            // CASE A: Loading a Global Deck via Short Link
-            const filename = params.get('deck');
-            this.fetchRemoteDeck(filename, true);
-        } 
-        else if(this.checkForURLImport()) {
-            // CASE B: Loading a compressed blob (legacy support)
-            // handled inside checkForURLImport
-        } 
-        else {
-            // CASE C: Default
+        // --- NEW: Load Single Mode Draft ---
+        const savedDraft = localStorage.getItem('recall_single_draft');
+        if (savedDraft) {
+            this.el.targetInput.value = savedDraft;
+        }
+
+        // --- NEW: Add Auto-Save Listener ---
+        this.el.targetInput.addEventListener('input', (e) => {
+            if(this.mode === 'single') {
+                localStorage.setItem('recall_single_draft', e.target.value);
+            }
+        });
+
+        // Check for Shared URL Import
+        if(!this.checkForURLImport()) {
             this.setMode('single');
         }
-        
-        this.updatePeek();
     },
-
     // --- LIBRARY SYSTEM ---
     loadLibrary() {
         const raw = localStorage.getItem('recall_lib_final');
@@ -588,10 +586,13 @@ createDeck(name, rawCards, filename = null) {
         this.el.btnPrev.style.display = isBulk ? 'inline-flex' : 'none';
         this.el.btnNext.style.display = isBulk ? 'inline-flex' : 'none';
 
-        if(m === 'single') {
+if(m === 'single') {
             document.getElementById('prompt-label').textContent = "SINGLE ENTRY";
             this.el.promptDisplay.textContent = "Single Entry Mode";
-            this.el.targetInput.value = "";
+            
+
+            this.el.targetInput.value = localStorage.getItem('recall_single_draft') || ""; 
+            
             this.resetAction();
         } else {
             document.getElementById('prompt-label').textContent = "DECK CARD";
@@ -673,22 +674,19 @@ createDeck(name, rawCards, filename = null) {
         this.el.scorePill.classList.remove('visible');
     },
 
-setState(s) {
+    setState(s) {
         this.state = s;
         
-        // 1. SETUP MODE (Editing Target)
+        // 1. SETUP MODE
         if (s === 'SETUP') {
-            // Target: Visible & Editable
             this.el.targetWrapper.classList.remove('collapsed');
             this.el.hiddenBar.style.display = 'none';
             this.el.targetInput.disabled = false; 
 
-            // Recall: Visible but Disabled
             this.el.recallInput.style.display = 'block';
             this.el.recallInput.disabled = true;
             this.el.recallInput.placeholder = "Click 'Start Recall' to type here...";
             
-            // Buttons/Views
             this.el.btnMain.textContent = 'Start Recall';
             this.el.btnMain.className = 'c-btn c-btn-main';
             this.el.btnMain.style.backgroundColor = 'var(--primary)';
@@ -696,19 +694,16 @@ setState(s) {
             this.el.btnEdit.disabled = false;
         } 
         
-        // 2. RECALL MODE (Typing Answer)
+        // 2. RECALL MODE
         else if (s === 'RECALL') {
-            // Target: Hidden (or Peekable) & Read-Only
             this.el.targetWrapper.classList.add('collapsed');
-            this.el.hiddenBar.style.display = 'block';
-            this.el.targetInput.disabled = true; // Prevent editing target while recalling
+            this.el.hiddenBar.style.display = 'block'; // Show "Hidden" bar
+            this.el.targetInput.disabled = true;
 
-            // Recall: Active
             this.el.recallInput.style.display = 'block';
             this.el.recallInput.disabled = false;
             this.el.recallInput.placeholder = "Type or speak your answer here...";
             
-            // Buttons/Views
             this.el.btnMain.textContent = 'Check Answer';
             this.el.btnMain.className = 'c-btn c-btn-main'; 
             this.el.btnMain.style.backgroundColor = 'var(--success)';
@@ -716,17 +711,21 @@ setState(s) {
             this.el.btnEdit.disabled = true;
         } 
         
-        // 3. REVIEW MODE (Checking Results)
+        // 3. REVIEW MODE (The Change is Here)
         else { 
-            // Target: Hidden (or Peekable)
-            this.el.targetWrapper.classList.add('collapsed');
-            this.el.hiddenBar.style.display = 'block';
+            // --- CHANGE START ---
+            // Reveal the Target Answer
+            this.el.targetWrapper.classList.remove('collapsed'); 
+            
+            // Hide the "Hidden" bar (since we are showing the text)
+            this.el.hiddenBar.style.display = 'none';
+            
+            // Keep it disabled so they don't accidentally edit it
             this.el.targetInput.disabled = true;
+            // --- CHANGE END ---
 
-            // Recall: Hidden (Replaced by Diff)
             this.el.recallInput.style.display = 'none';
             
-            // Buttons/Views
             this.el.btnMain.textContent = this.mode === 'bulk' ? 'Next Card ▶' : 'Retry 🔄';
             this.el.btnMain.style.backgroundColor = 'var(--primary)';
             this.el.diffView.classList.add('active');
@@ -744,13 +743,12 @@ setState(s) {
 updatePeek() {
         const allowed = this.ALLOW_PEEK;
         
-        // Update visual style of the bar
         this.el.hiddenBar.className = allowed ? 'hidden-bar' : 'hidden-bar disabled';
         this.el.hiddenBar.innerText = allowed ? "🔒 Target Answer Hidden (Click to Peek)" : "🔒 Target Answer Hidden";
         
-        // BUG FIX: Only force collapse if peeking is off AND we are NOT in setup mode.
-        // In 'SETUP' mode, the box must always be visible so the user can type.
-        if (!allowed && this.state !== 'SETUP') {
+        // FIX: Only force collapse if peeking is disallowed AND we are currently Recalling.
+        // In SETUP or REVIEW, the box should be allowed to be visible.
+        if (!allowed && this.state === 'RECALL') {
             this.el.targetWrapper.classList.add('collapsed');
         }
     },
@@ -890,66 +888,77 @@ shareActiveDeck() {
     },
     
     // 1. Save to LocalStorage and Render
-    addToHistory(t, s, html) {
-        const history = JSON.parse(localStorage.getItem('recall_hist_v12') || "[]");
-        const newItem = {
+addToHistory(t, s, html) {
+        // 1. Get existing history or empty array
+        const history = JSON.parse(localStorage.getItem('recall_session_history') || "[]");
+        
+        // 2. Add new item to top
+        history.unshift({
             id: Date.now(),
-            date: new Date().toLocaleTimeString(),
-            target: t,
-            score: s,
-            diff: html
-        };
-        history.unshift(newItem);
-        // Keep last 50 items
-        localStorage.setItem('recall_hist_v12', JSON.stringify(history.slice(0, 50)));
+            t: t, 
+            s: s, 
+            html: html, // We save the diff HTML to view later
+            d: new Date().toLocaleTimeString()
+        });
+
+        // 3. Save back to storage (Limit to last 50 items to save space)
+        localStorage.setItem('recall_session_history', JSON.stringify(history.slice(0, 50)));
+        
+        // 4. Refresh the table
         this.loadHistory();
     },
     // 2. Render the Table
     loadHistory() {
-        const history = JSON.parse(localStorage.getItem('recall_hist_v12') || "[]");
+        const history = JSON.parse(localStorage.getItem('recall_session_history') || "[]");
         const tbody = document.getElementById('history-body');
-        tbody.innerHTML = '';
+        tbody.innerHTML = ''; // Clear current rows
 
         history.forEach((item, index) => {
             const row = tbody.insertRow();
-            const targetPreview = item.target.length > 30 ? item.target.substring(0, 30) + "..." : item.target;
-            const scoreColor = item.score >= 80 ? 'var(--success)' : 'var(--danger)';
-
+            
+            // Render columns
             row.innerHTML = `
                 <td>${index + 1}</td>
-                <td style="font-size:0.85rem; color:#64748b;">${item.date}</td>
-                <td title="${item.target.replace(/"/g, '&quot;')}">${targetPreview}</td>
-                <td style="font-weight:700; color:${scoreColor};">${item.score}%</td>
-                <td style="text-align: right;">
-                    <button class="c-btn-nav" onclick="app.viewHistoryItem(${index})" title="View Details" style="font-size:0.8rem; color:var(--primary);">View</button>
-                    <button class="c-btn-nav" onclick="app.retakeHistoryItem(${index})" title="Retake" style="font-size:0.8rem;">Retake</button>
-                    <button class="c-btn-nav" onclick="app.deleteHistoryItem(${index})" title="Delete" style="font-size:0.8rem; color:var(--danger);">Del</button>
+                <td style="font-size:0.85rem; color:#64748b;">${item.d}</td>
+                <td title="${item.t.replace(/"/g, '&quot;')}">${item.t.substring(0, 30)}...</td>
+                <td style="color:${item.s >= 80 ? 'var(--success)' : 'var(--danger)'}; font-weight:bold;">${item.s}%</td>
+                <td style="text-align:right;">
+                    <!-- Added View / Delete buttons -->
+                    <button onclick='app.viewHistoryItem(${index})' style="border:none; background:none; cursor:pointer; margin-right:5px;">👁️</button>
+                    <button onclick='app.deleteHistoryItem(${index})' style="color:var(--danger); border:none; background:none; cursor:pointer;">🗑️</button>
                 </td>
             `;
         });
     },
-     // 3. Clear All
-    clearHistory() {
-        if(confirm("Clear entire session history?")) {
-            localStorage.removeItem('recall_hist_v12');
-            this.loadHistory();
+
+    clearHistory() { 
+        if(confirm("Clear all session history?")) {
+            localStorage.removeItem('recall_session_history'); 
+            this.loadHistory(); 
         }
     },
-    closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none'); },
+
+    // Helper to delete specific row
+    deleteHistoryItem(index) {
+        const history = JSON.parse(localStorage.getItem('recall_session_history'));
+        history.splice(index, 1);
+        localStorage.setItem('recall_session_history', JSON.stringify(history));
+        this.loadHistory();
+    },
+
+    // Helper to view specific result (using existing Modal)
     viewHistoryItem(index) {
-        const history = JSON.parse(localStorage.getItem('recall_hist_v12'));
+        const history = JSON.parse(localStorage.getItem('recall_session_history'));
         const item = history[index];
-        
-        document.getElementById('rev-title').textContent = "Result Details";
-        // Reuse the Revision Modal for displaying single history details
+        document.getElementById('rev-title').textContent = "History Details";
         document.getElementById('rev-body').innerHTML = `
-            <tr><td style="width:100px; font-weight:600;">Date</td><td>${item.date}</td></tr>
-            <tr><td style="font-weight:600;">Target</td><td>${item.target}</td></tr>
-            <tr><td style="font-weight:600;">Your Score</td><td style="font-weight:700;">${item.score}%</td></tr>
-            <tr><td colspan="2" style="border-top:1px solid #eee; padding-top:10px;"><div class="diff-view active" style="border:1px solid #eee; padding:10px; border-radius:6px;">${item.diff}</div></td></tr>
+            <tr><td style="font-weight:bold; width:30%;">Target</td><td>${item.t}</td></tr>
+            <tr><td style="font-weight:bold;">Result</td><td><div class="diff-view active" style="border:1px solid #eee; padding:10px;">${item.html}</div></td></tr>
         `;
         this.el.mRev.style.display = 'flex';
-    },
+    }, 
+    closeModals() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none'); },
+    
 
     retakeHistoryItem(index) {
         const history = JSON.parse(localStorage.getItem('recall_hist_v12'));
@@ -961,13 +970,7 @@ shareActiveDeck() {
         this.el.targetInput.scrollIntoView({ behavior: 'smooth' });
     },
 
-    deleteHistoryItem(index) {
-        if(!confirm("Delete this entry?")) return;
-        const history = JSON.parse(localStorage.getItem('recall_hist_v12'));
-        history.splice(index, 1);
-        localStorage.setItem('recall_hist_v12', JSON.stringify(history));
-        this.loadHistory();
-    },
+    
     // --- SCORING (LCS) ---
     calculateScore() {
         const t = this.el.targetInput.value;
